@@ -1,0 +1,69 @@
+<ServerManagerConfiguration>
+  <ProxyGroup name="sources">
+    <SourceProxy name="BoutImport" class="vtkPythonProgrammableFilter"
+                 label="BoutImport">
+      <Documentation>
+        long_help=""
+        short_help=""
+      </Documentation>
+
+      <!-- Output data type: "vtkStructuredGrid" -->
+      <IntVectorProperty
+          name="OutputDataSetType"
+          command="SetOutputDataSetType"
+          number_of_elements="1"
+          default_values="2"
+          panel_visibility="never">
+      </IntVectorProperty>
+
+      <DoubleVectorProperty information_only="1" 
+                            name="TimestepValues" 
+                            repeatable="1"> 
+        <TimeStepsInformationHelper /> 
+        <Documentation>Available timestep values.</Documentation> 
+      </DoubleVectorProperty>
+
+      <!-- the script -->
+      <StringVectorProperty
+          name="Script"
+          command="SetScript"
+          number_of_elements="1"
+          panel_visibility="advanced"
+          default_values='import sys&#xA;import os&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.import_bout(self)&#xA;'>
+        <Hints>
+          <Widget type="multi_line"/>
+        </Hints>
+        <Documentation>This property contains the text of a python program that
+        the programmable source runs.</Documentation>
+      </StringVectorProperty>
+
+      <StringVectorProperty
+          name="InformationScript"
+          label="RequestInformation Script"
+          command="SetInformationScript"
+          number_of_elements="1"
+          panel_visibility="advanced"
+          default_values='import sys&#xA;import os&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;bout_import.request_info_script(self)&#xA;'>
+        <Hints>
+          <Widget type="multi_line"/>
+        </Hints>
+        <Documentation>This property is a python script that is executed during
+        the RequestInformation pipeline pass. Use this to provide information
+        such as WHOLE_EXTENT to the pipeline downstream.</Documentation>
+      </StringVectorProperty>
+
+
+      <!-- python script references a variable "file"
+           we expose this as a property allowing the user to set it -->
+      <!-- <StringVectorProperty
+           name="file"
+           command="SetParameter"
+           number_of_elements="2"
+           default_values_delimiter=";"
+           default_values="file;'give_the_path_of_the_file'">
+           </StringVectorProperty> -->
+
+    </SourceProxy>
+  </ProxyGroup>
+</ServerManagerConfiguration>
+
