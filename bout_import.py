@@ -48,20 +48,21 @@ def set_output_extent(pipeline, nx, ny, nz):
     out_info.Set(executive.WHOLE_EXTENT(), 0, nx-1, 0, ny-1, 0, nz-1)
     # print(out_info)
 
-def request_info_script(pipeline, directory="/home/peter/Codes/BOUT-dev/examples/stellarator/n16_noyend"):
+def request_info(pipeline, filename):
     """RequestInformation script
     """
 
-    import PyQt4.QtGui
-    filename = PyQt4.QtGui.QFileDialog.getOpenFileName(None, "Select a file...")
+    # import PyQt4.QtGui
+    # filename = str(PyQt4.QtGui.QFileDialog.getOpenFileName(None, "Select a file..."))
+    directory = os.path.dirname(filename)
 
     # print("Requesting info")
     # Get list of output files
-    file_list = get_bout_datafiles(directory)
+    # file_list = get_bout_datafiles(directory)
 
     # Read timesteps from first file
     # print("Variables in file:")
-    with DataFile(file_list[0]) as f:
+    with DataFile(filename) as f:
         # Get timesteps
         t_array = f.read("t_array")
         if t_array is None:
@@ -84,6 +85,8 @@ def request_info_script(pipeline, directory="/home/peter/Codes/BOUT-dev/examples
 
     set_output_extent(pipeline, nx, ny, nz)
 
+    return directory
+
 def get_update_timestep(pipeline):
     """Returns the requested time value, or None if not present
     """
@@ -94,7 +97,11 @@ def get_update_timestep(pipeline):
     else:
         return None
 
-def import_bout(pipeline, directory="/home/peter/Codes/BOUT-dev/examples/stellarator/n16_noyend"):
+def request_data(pipeline):
+    """Read the datasets from the output files
+    """
+
+    directory = pipeline.directory
 
     file_list = get_bout_datafiles(directory)
     # print(file_list)
@@ -146,6 +153,9 @@ def import_bout(pipeline, directory="/home/peter/Codes/BOUT-dev/examples/stellar
     # Get the requested timestep
     req_time = get_update_timestep(pipeline)
     timestep = (np.abs(t_array-req_time)).argmin()
+
+    output = pipeline.GetOutput()
+    output.GetInformation().Set(output.DATA_TIME_STEP(), req_time)
 
     # Add the variables to the output
     add_fields_to_sgo(sgo, var_list, directory, timestep=timestep)

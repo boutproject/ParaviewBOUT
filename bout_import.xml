@@ -23,13 +23,25 @@
         <Documentation>Available timestep values.</Documentation> 
       </DoubleVectorProperty>
 
+      <StringVectorProperty
+          name="FileName"
+          label="FileName"
+          initial_string="FileName"
+          command="SetParameter"
+          animateable="1"
+          default_values=""
+          number_of_elements="1">
+        <Documentation></Documentation>
+        <FileListDomain name="files"/>
+      </StringVectorProperty>
+
       <!-- the script -->
       <StringVectorProperty
           name="Script"
           command="SetScript"
           number_of_elements="1"
           panel_visibility="advanced"
-          default_values='import sys&#xA;import os&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.import_bout(self)&#xA;'>
+          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.request_data(self)&#xA;'>
         <Hints>
           <Widget type="multi_line"/>
         </Hints>
@@ -43,7 +55,7 @@
           command="SetInformationScript"
           number_of_elements="1"
           panel_visibility="advanced"
-          default_values='import sys&#xA;import os&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;bout_import.request_info_script(self)&#xA;'>
+          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;self.directory = bout_import.request_info(self, FileName)&#xA;'>
         <Hints>
           <Widget type="multi_line"/>
         </Hints>
@@ -52,17 +64,10 @@
         such as WHOLE_EXTENT to the pipeline downstream.</Documentation>
       </StringVectorProperty>
 
-
-      <!-- python script references a variable "file"
-           we expose this as a property allowing the user to set it -->
-      <!-- <StringVectorProperty
-           name="file"
-           command="SetParameter"
-           number_of_elements="2"
-           default_values_delimiter=";"
-           default_values="file;'give_the_path_of_the_file'">
-           </StringVectorProperty> -->
-
+      <Hints>
+        <ReaderFactory extensions="nc"
+                       file_description="BOUT++" />
+      </Hints>
     </SourceProxy>
   </ProxyGroup>
 </ServerManagerConfiguration>
