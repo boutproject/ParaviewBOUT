@@ -41,7 +41,7 @@
           command="SetScript"
           number_of_elements="1"
           panel_visibility="advanced"
-          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.request_data(self)&#xA;'>
+          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.request_data(self, FileName)&#xA;'>
         <Hints>
           <Widget type="multi_line"/>
         </Hints>
