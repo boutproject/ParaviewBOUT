@@ -94,8 +94,8 @@ def request_data(pipeline, filename):
     nz = boutdata.collect("MZ", path=directory, info=False)
     nz = nz - 1
     x = np.linspace(0, nx*dx[0,0], nx)
-    y = np.linspace(0, ny*dy[0,0], ny)
-    z = np.linspace(0, nz*dz, nz)
+    y = np.linspace(0, ny*dy[0,0], ny, endpoint=False)
+    z = np.linspace(0, nz*dz, nz, endpoint=False)
 
     X,Y,Z = np.meshgrid(x,y,z, indexing='ij')
 
