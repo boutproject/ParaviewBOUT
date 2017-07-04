@@ -16,11 +16,11 @@
           panel_visibility="never">
       </IntVectorProperty>
 
-      <DoubleVectorProperty information_only="1" 
-                            name="TimestepValues" 
-                            repeatable="1"> 
-        <TimeStepsInformationHelper /> 
-        <Documentation>Available timestep values.</Documentation> 
+      <DoubleVectorProperty information_only="1"
+                            name="TimestepValues"
+                            repeatable="1">
+        <TimeStepsInformationHelper />
+        <Documentation>Available timestep values.</Documentation>
       </DoubleVectorProperty>
 
       <StringVectorProperty
@@ -35,13 +35,36 @@
         <FileListDomain name="files"/>
       </StringVectorProperty>
 
+      <StringVectorProperty
+          name="GridFile"
+          label="GridFile"
+          initial_string="GridFile"
+          command="SetParameter"
+          animateable="1"
+          default_values="/home/peter/Codes/BOUT-dev/examples/stellarator/fci.y_no_end.nc"
+          number_of_elements="1">
+        <Documentation></Documentation>
+        <FileListDomain name="files"/>
+      </StringVectorProperty>
+
+      <IntVectorProperty
+          name="UpscaleFactor"
+          label="UpscaleFactor"
+          initial_string="UpscaleFactor"
+          command="SetParameter"
+          animateable="1"
+          default_values="1"
+          number_of_elements="1">
+        <Documentation></Documentation>
+      </IntVectorProperty>
+
       <!-- the script -->
       <StringVectorProperty
           name="Script"
           command="SetScript"
           number_of_elements="1"
           panel_visibility="advanced"
-          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.request_data(self, FileName)&#xA;'>
+          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;sgo = bout_import.request_data(self, FileName, GridFile, UpscaleFactor)&#xA;'>
         <Hints>
           <Widget type="multi_line"/>
         </Hints>
@@ -55,7 +78,7 @@
           command="SetInformationScript"
           number_of_elements="1"
           panel_visibility="advanced"
-          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;self.directory = bout_import.request_info(self, FileName)&#xA;'>
+          default_values='import sys&#xA;sys.path.append(r"/home/peter/Learning/paraview/boutimport")&#xA;import bout_import&#xA;self.directory = bout_import.request_info(self, FileName, UpscaleFactor)&#xA;'>
         <Hints>
           <Widget type="multi_line"/>
         </Hints>
@@ -71,4 +94,3 @@
     </SourceProxy>
   </ProxyGroup>
 </ServerManagerConfiguration>
-

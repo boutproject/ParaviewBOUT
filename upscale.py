@@ -9,7 +9,7 @@ from vtk.numpy_interface import dataset_adapter as dsa
 from paraview import numpy_support
 
 
-def upscale(pipeline, gridfile, upscale_factor=4):
+def upscale(field, gridfile, upscale_factor=4):
     """Increase the resolution in y of field along the FCI maps from
     gridfile.
     """
@@ -19,11 +19,7 @@ def upscale(pipeline, gridfile, upscale_factor=4):
         xt_prime = grid.read("forward_xt_prime")
         zt_prime = grid.read("forward_zt_prime")
 
-    # Get the input data
-    field = dsa.WrapDataObject(pipeline.GetPolyDataInput()).PointData['f']
-    
     # The field should be the same shape as the grid
-    
     if field.shape != xt_prime.shape:
         try:
             field = field.reshape(xt_prime.T.shape).T
@@ -79,11 +75,6 @@ def upscale(pipeline, gridfile, upscale_factor=4):
     hires_x = twizzle(hires_x)
     hires_z = twizzle(hires_z)
 
-    # Make high resolution y index array
-    y_temp = np.linspace(0, ny, upscale_factor*ny, endpoint=False)
-    hires_y = np.tile(y_temp[:,np.newaxis,np.newaxis], [nx, nz])
-    hires_y = hires_y.transpose((1, 0, 2))
-
     # Interpolate from field line sections onto grid
     hires_grid_field = np.zeros( (nx, upscale_factor*ny, nz) )
     hires_index_coords = np.mgrid[0:nx, 0:ny:1./upscale_factor, 0:nz]
@@ -101,32 +92,4 @@ def upscale(pipeline, gridfile, upscale_factor=4):
         hires_grid_field[:,k,:] = griddata(points, f_slice.flat, grid_points,
                                            method='linear', fill_value=0.0)
 
-    vtk_data = numpy_support.numpy_to_vtk(hires_grid_field.T.flatten().copy(), deep=1)
-    vtk_data.SetName("f")
-    sgo = pipeline.GetStructuredGridOutput()
-
-    executive = pipeline.GetExecutive()
-    out_info = executive.GetOutputInformation(0)
-
-    out_info.Set(executive.WHOLE_EXTENT(), 0, nx-1, 0, upscale_factor*ny-1, 0, nz-1)
-
-    # output = pipeline.GetOutput()
-    # output.GetInformation().Set(output.WHOLE_EXTENT(), 0, nx-1, 0, upscale_factor*ny-1, 0, nz-1)
-
-    # Add coordinate points
-    x_min, x_max, y_min, y_max, z_min, z_max = sgo.GetBounds()
-    x = np.linspace(x_min, x_max, nx)
-    y = np.linspace(y_min, y_max, upscale_factor*ny, endpoint=False)
-    z = np.linspace(z_min, z_max, nz, endpoint=False)
-
-    X, Y, Z = np.meshgrid(x,y,z, indexing='ij')
-    hires_coords = algs.make_vector(X.T.flatten(), Y.T.flatten(), Z.T.flatten())
-    points = vtkPoints()
-    points.SetData(dsa.numpyTovtkDataArray(hires_coords, 'Points'))
-    sgo.SetPoints(points)
-    sgo.SetDimensions(nx, upscale_factor*ny, nz)
-    # sgo.SetExtent(0, nx-1, 0, upscale_factor*ny-1, 0, nz-1)
-
-    sgo.GetPointData().SetScalars(vtk_data)
-
-    return pipeline
+    return hires_grid_field

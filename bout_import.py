@@ -6,6 +6,7 @@
 
 import os.path
 import numpy as np
+import warnings
 
 from boututils.datafile import DataFile
 import boutdata
@@ -14,6 +15,8 @@ from vtk import vtkPoints
 from vtk.numpy_interface import algorithms as algs
 from vtk.numpy_interface import dataset_adapter as dsa
 from paraview import numpy_support
+
+import upscale
 
 def set_output_timesteps(pipeline, timesteps):
     """Helper routine to set timestep info
@@ -49,7 +52,7 @@ def set_output_extent(pipeline, nx, ny, nz):
 
     out_info.Set(executive.WHOLE_EXTENT(), 0, nx-1, 0, ny-1, 0, nz-1)
 
-def request_info(pipeline, filename):
+def request_info(pipeline, filename, upscale_factor=1):
     """RequestInformation script
     """
 
@@ -74,13 +77,23 @@ def request_info(pipeline, filename):
     nz = boutdata.collect("MZ", path=directory, info=False)
     nz = nz - 1
 
+    ny = upscale_factor*ny
+
     set_output_extent(pipeline, nx, ny, nz)
 
     return directory
 
-def request_data(pipeline, filename):
+def request_data(pipeline, filename, gridfile=None, upscale_factor=1):
     """Read the datasets from the output files
     """
+
+    # upscale_factor must be integer and >= 1
+    if not isinstance(upscale_factor, int):
+        raise TypeError("upscale_factor must be integer (upscale_factor = {})"
+                        .format(upscale_factor))
+    elif upscale_factor <= 0:
+        raise TypeError("upscale_factor must be larger than 1 (upscale_factor = {})"
+                        .format(upscale_factor))
 
     directory = pipeline.directory
 
@@ -94,7 +107,7 @@ def request_data(pipeline, filename):
     nz = boutdata.collect("MZ", path=directory, info=False)
     nz = nz - 1
     x = np.linspace(0, nx*dx[0,0], nx)
-    y = np.linspace(0, ny*dy[0,0], ny, endpoint=False)
+    y = np.linspace(0, ny*dy[0,0], upscale_factor*ny, endpoint=False)
     z = np.linspace(0, nz*dz, nz, endpoint=False)
 
     X,Y,Z = np.meshgrid(x,y,z, indexing='ij')
@@ -108,8 +121,8 @@ def request_data(pipeline, filename):
     sgo = pipeline.GetStructuredGridOutput()
 
     # Set size of output object
-    sgo.SetDimensions(nx, ny, nz)
-    sgo.SetExtent(0, nx-1, 0, ny-1, 0, nz-1)
+    sgo.SetDimensions(nx, upscale_factor*ny, nz)
+    sgo.SetExtent(0, nx-1, 0, upscale_factor*ny-1, 0, nz-1)
 
     # Add coordinate points
     sgo.SetPoints(points)
@@ -130,11 +143,11 @@ def request_data(pipeline, filename):
     output.GetInformation().Set(output.DATA_TIME_STEP(), req_time)
 
     # Add the variables to the output
-    add_fields_to_sgo(sgo, var_list, directory, timestep=timestep)
+    add_fields_to_sgo(sgo, var_list, directory, timestep, gridfile, upscale_factor)
 
     return pipeline
 
-def add_fields_to_sgo(sgo, var_list, directory, timestep=None):
+def add_fields_to_sgo(sgo, var_list, directory, timestep=None, gridfile=None, upscale_factor=1):
     """Add the fields with more than 2 dimensions to the grid output
     """
 
@@ -145,8 +158,14 @@ def add_fields_to_sgo(sgo, var_list, directory, timestep=None):
         # Read data
         bout_data = boutdata.collect(var, tind=timestep, path=directory, info=False)
 
+        if gridfile is not None and upscale_factor > 1:
+            bout_data = upscale.upscale(np.squeeze(bout_data), gridfile, upscale_factor)
+        elif gridfile is None and upscale_factor > 1:
+            warnings.warn("upscale_factor is {}, but no gridfile provided".format(upscale_factor),
+                          RuntimeWarning)
+
         # Convert from numpy to vtk
-        vtk_data = numpy_support.numpy_to_vtk(np.squeeze(bout_data).T.flatten().copy(), deep=1)
+        vtk_data = numpy_support.numpy_to_vtk(bout_data.T.flatten().copy(), deep=1)
         # Set field name
         vtk_data.SetName(var)
 
